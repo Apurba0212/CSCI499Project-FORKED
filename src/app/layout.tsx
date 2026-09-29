@@ -11,10 +11,15 @@ const playfair = Playfair_Display({
 });
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
+// Explicit override first, then Vercel's production domain, then local dev.
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "http://localhost:3001");
+
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3001",
-  ),
+  metadataBase: new URL(siteUrl),
   title: {
     default: "SceneHawk",
     template: "%s · SceneHawk",
