@@ -1,8 +1,9 @@
 # Answer-key corrections
 
-A record of deliberate changes to `exam.csv`, the human answer key. The answer
-key is the one set the model is never trained on, so every edit to it needs to
-be visible and justified rather than living in someone's working copy.
+A record of deliberate changes to `exam.csv`, the answer key. It holds the team's
+111 reviews plus 100 spot-check rows that started as DeepSeek's labels and were
+then hand checked. The model is never trained on this set, so every edit to it
+needs to be visible and justified rather than living in someone's working copy.
 
 ## 2026-10-26 - three marks cleared
 

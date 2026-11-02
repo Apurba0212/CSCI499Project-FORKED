@@ -41,7 +41,8 @@ create index films_genres_idx on films using gin (genres);
 --
 -- label_split is the guard rail: the hand-labelled answer key is marked
 -- 'answer_key' and must NEVER be used for training. Enforce it in the loader,
--- and the column makes it checkable in SQL.
+-- and the column makes it checkable in SQL. 'spot_check' holds DeepSeek labels
+-- the team hand checked. They are not trained on or part of the headline score.
 -- ---------------------------------------------------------------------------
 create table reviews (
     review_id    text primary key,                  -- 'train-unsup-25843'
@@ -53,7 +54,7 @@ create table reviews (
     imdb_rating  smallint,
     char_len     integer generated always as (length(text)) stored,
     label_split  text not null default 'unlabeled'
-                 check (label_split in ('answer_key','train','val','test','unlabeled'))
+                 check (label_split in ('answer_key','spot_check','train','val','test','unlabeled'))
 );
 
 create index reviews_film_idx  on reviews (tmdb_id);

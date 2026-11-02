@@ -5,7 +5,7 @@
     "min_train": 20,
     "wide_ci": 8
   },
-  "headline_metric": "macro-F1 over the 'reportable' tier",
+  "headline_metric": "the wide comparison: macro-F1 over the 'reportable' tier. score.py's default headline is narrower.",
   "tiers": {
     "reportable": [
       "amused",

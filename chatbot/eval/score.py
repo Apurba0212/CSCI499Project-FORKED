@@ -3,11 +3,15 @@
 
 Two rules this enforces so nobody has to remember them under deadline:
 
-  1. The headline number is macro-F1 over the `reportable` tier only
-     (eval/metric_tiers.py). Feelings with no answer-key positives have
-     recall 0/0 - undefined, not zero - so there is no F1 to average in.
-     Including them would silently drag the macro number toward 0 and make a
-     labelling limit look like a model failure.
+  1. The headline number covers only the reviews the team labelled, and only
+     the feelings with at least MIN_POSITIVES examples among them. The other
+     answer-key rows started as DeepSeek's labels and were then hand checked,
+     so they are not independent of the labels the model trained on. --wide
+     scores every answer-key review over the `reportable` tier instead
+     (eval/metric_tiers.py). Feelings with no positives have recall 0/0 -
+     undefined, not zero - so there is no F1 to average in. Including them
+     would silently drag the macro number toward 0 and make a labelling limit
+     look like a model failure.
 
   2. Thresholds are tuned on `val`, never on the answer key. With base rates
      this low a flat 0.5 predicts almost nothing, so per-feeling thresholds
@@ -37,6 +41,22 @@ LABELS = ROOT / "data" / "labels"
 # which would make the headline number unreproducible by anyone but us.
 SPLIT_SOURCE = {"train": "learning", "val": "checking", "answer_key": "exam"}
 TIERS = HERE / "metric_tiers.json"
+MANIFEST = ROOT / "data" / "labeling" / "manifest.json"
+MIN_POSITIVES = 3                                      # the reportable tier's rule
+
+
+def team_labelled():
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    return {rid for ids in manifest["assignments"].values() for rid in ids}
+
+
+def team_view(truth, preds, feelings):
+    """The headline's reviews and feelings: what the team labelled, and the
+    feelings with enough examples there to score."""
+    kept = {k: truth[k] for k in team_labelled() & set(truth) & set(preds)}
+    names = [f for i, f in enumerate(feelings)
+             if sum(v[i] for v in kept.values()) >= MIN_POSITIVES]
+    return kept, names
 
 
 def prf(tp, fp, fn):
@@ -205,6 +225,8 @@ def main():
                     help="fit per-feeling thresholds on this split (use val)")
     ap.add_argument("--thresholds", help="frozen thresholds from a --tune run")
     ap.add_argument("--out", help="where to write tuned thresholds")
+    ap.add_argument("--wide", action="store_true",
+                    help="answer key only: every review, over the reportable tier")
     args = ap.parse_args()
 
     split = args.split or ("val" if args.tune else "answer_key")
@@ -222,6 +244,10 @@ def main():
     overlap = set(truth) & set(preds)
     if not overlap:
         sys.exit("No ids in common between predictions and truth.")
+    team = split == "answer_key" and not args.wide
+    if team:
+        truth, reportable = team_view(truth, preds, feelings)
+        overlap = set(truth)
     print(f"split {split}: {len(truth)} reviews, "
           f"{len(overlap)} with predictions\n")
 
@@ -241,6 +267,10 @@ def main():
         scored[f] = {"threshold": thr.get(f, 0.5), "support": tp + fn,
                      "tp": tp, "fp": fp, "precision": p, "recall": r, "f1": f1}
 
+    if team:
+        wide = {f for f in reportable
+                if scored[f]["support"] <= tiers["thresholds"]["wide_ci"]}
+
     def fmt(v):
         return " n/a " if v is None else f"{v:.3f}"
 
@@ -256,13 +286,13 @@ def main():
     print("-" * 61)
 
     head = macro_f1(scored, reportable)
-    print(f"\nmacro-F1 over the {len(reportable)} reportable feelings: "
-          f"{fmt(head)}")
+    scope = (f"with >= {MIN_POSITIVES} team-labelled examples" if team
+             else "in the reportable tier")
+    print(f"\nmacro-F1 over the {len(reportable)} feelings {scope}: {fmt(head)}")
     print("  ^ cite it with that qualifier, never as bare macro-F1")
     all28 = macro_f1(scored, feelings)
     print(f"\nfor contrast, over all 28 (do not headline this): {fmt(all28)}")
-    excluded = [f for t in ("trainable_only", "unmeasurable", "cannot_learn")
-                for f in tiers["tiers"].get(t, [])]
+    excluded = [f for f in feelings if f not in reportable]
     print(f"  the {len(excluded)} excluded: {', '.join(excluded)}")
     if wide & set(reportable):
         print(f"\n* {len(wide & set(reportable))} reportable feelings have few "

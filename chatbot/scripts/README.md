@@ -36,6 +36,7 @@ python scripts/05_sample_for_labeling.py   # pick reviews to hand-label
 # ... hand labelling, then LLM labelling in notebooks/scenehawk_llm_labeling.ipynb
 python scripts/06_expand_films.py          # add the films the splits need
 python scripts/04_load_supabase.py         # reload the grown corpus
+# db/migrations/2026-11-02_spot_check_split.sql, once, on an older database
 python scripts/07_load_labels.py           # labels -> review_labels, stamp label_split
 python scripts/08_export_labels.py         # text-free copies for git
 ```
@@ -56,7 +57,17 @@ absence is the row not existing. It maps:
 |---|---|---|---|
 | `learning.csv` | `train` | `llm` | `deepseek` |
 | `checking.csv` | `val` | `llm` | `deepseek` |
-| `exam.csv` | `answer_key` | `human` | `team` |
+| `exam.csv`, the team's 111 reviews | `answer_key` | `human` | `team` |
+| `exam.csv`, the other 100 | `spot_check` | `llm` | `deepseek_hand_checked` |
+
+The spot-check rows started as DeepSeek's labels and were then hand checked.
+`data/labeling/manifest.json` says which reviews are the team's. Five spot-check
+reviews are outside the corpus, so 95 get stamped.
+
+The team was assigned 176 different reviews, but `hand_labels_all.csv`, the file
+the labelling notebook loaded, held 126 rows covering only 111 of them. Nothing
+records why. Of the other 65, 2 ended up in training with DeepSeek's labels, on
+films outside the answer key, and 63 are unused.
 
 Step 8 writes `data/labels/*_labels.csv` - the same labels with the review text
 dropped, 4.9 MB down to 313 KB. The full split files are gitignored because
@@ -79,7 +90,7 @@ find exactly 28.
 | Output | Contents |
 |---|---|
 | `data/films_starter.json` | 1,259 films with title, year, genres, description, review count |
-| `data/reviews.jsonl` | 34,626 cleaned reviews, each linked to its film |
+| `data/reviews.jsonl` | 36,680 cleaned reviews, each linked to its film |
 | Supabase `feelings` / `films` / `reviews` | the same data, queryable and shared with the team |
 
 Median 30 reviews per film; median review length ~1,000 characters.
@@ -103,7 +114,7 @@ committed label files (no database needed). Re-run it after any labelling round.
 
 | tier | meaning |
 | --- | --- |
-| `reportable` | >=3 answer-key examples. The headline macro-F1 covers these only. |
+| `reportable` | >=3 examples across all 206 scored answer-key reviews. The wider macro-F1 covers these only. The headline applies the same rule to the team's 111 reviews, which leaves 11 feelings. |
 | `trainable_only` | 1-2 answer-key examples. Train on them, do not report an F1. |
 | `unmeasurable` | no answer-key examples, so recall is 0/0 and F1 is undefined. |
 | `cannot_learn` | no training examples either. |
@@ -113,7 +124,9 @@ nothing, and removing a feeling from the label space is hard to undo later. The 
 answer-key size, not labelling quality - `scared` has 48 training examples and 2 in the
 answer key.
 
-Always name the metric as "macro-F1 over the reportable tier", never bare "macro-F1".
+Always name the metric, never bare "macro-F1": "macro-F1 over the 11 feelings with >=3
+team-labelled examples" for the headline, or "macro-F1 over the 18 reportable feelings"
+for the wider comparison.
 
 ## Week 4 - training data, baseline, scoring
 
@@ -150,7 +163,7 @@ Two failure modes bit us, in opposite directions:
 
 So: a feeling earns its own threshold with >= 10 val positives (9 qualify); the
 rest share a global threshold fitted only on the low-support feelings that use
-it. Baseline macro-F1 **0.157** over the 18 reportable feelings.
+it. The results are under "The number to beat" below.
 
 ### Reproducible without the dataset
 
@@ -162,7 +175,7 @@ Committed, text-free:
 | file | what it is |
 | --- | --- |
 | `data/labels/*_labels.csv` | the labels, ids and 28 columns, no review text |
-| `data/labels/corpus_ids.txt` | the 3,303 labelled reviews that have text |
+| `data/labels/corpus_ids.txt` | the 3,303 labelled reviews that are in the corpus |
 | `data/training/meta.json` | the canonical feeling order, and train positives |
 | `eval/metric_tiers.json` | which feelings may be reported on |
 | `eval/thresholds_baseline.json` | the frozen cut points |
@@ -176,7 +189,7 @@ Gitignored (carries review text): `data/{learning,checking,exam}.csv`,
 `eval/llm_raw/`.
 
 `corpus_ids.txt` exists because of a bug worth not repeating. 471 labelled
-reviews are non-film titles with no text (see step 6), so counts have to be
+reviews are from non-film titles outside the corpus (see step 6), so counts have to be
 filtered to the usable 3,303. That filter originally ran against
 `reviews.jsonl` - gitignored - and was written `if known and ...`, so on a
 clean clone it got an empty set and quietly filtered nothing. `amused` counted
@@ -191,34 +204,44 @@ Verify after any change to the label files:
 
 ### The number to beat
 
-| | macro-F1 (18 reportable) |
-| --- | --- |
-| predict nothing | 0.000 |
-| tf-idf + logistic regression | **0.157** |
-| `distilroberta-base`, fine-tuned | **0.311** |
-| GPT 5.5 (see below) | **0.728** |
+| | team's 111 reviews, 11 feelings | all 206 reviews, 18 reportable |
+| --- | --- | --- |
+| predict nothing | 0.000 | 0.000 |
+| tf-idf + logistic regression | **0.222** | 0.157 |
+| `distilroberta-base`, fine-tuned | **0.410** | 0.311 |
+| GPT 5.5 (see below) | **0.726** | 0.728 |
 
-The baseline scores above 0 on 9 feelings and exactly 0 on the other 9; the
-fine-tuned model scores above 0 on 14. It beats the baseline on 12 feelings,
-loses on 2 (`thoughtful`, `nostalgic`) and ties on 4, all at 0.
+The first column is the headline. The other 95 scored reviews are spot-check
+rows, which started as DeepSeek's labels and were then hand checked, so they are
+not independent of the labels the model trained on. The >=3 rule applied to the
+team's 111 leaves 11 feelings, so name this one "macro-F1 over the 11 feelings
+with >=3 team-labelled examples". `eval/metric_tiers.json` still lists the 18,
+which is what the second column uses. `eval/score.py` and `eval/compare.py` report
+the first column by default, and the second with `--wide`.
+
+On the 111, the baseline scores above 0 on 6 feelings and exactly 0 on the other
+5; the fine-tuned model scores above 0 on 10. It beats the baseline on 8 feelings,
+loses on 2 (`thoughtful`, `nostalgic`) and ties on 1 (`confused`, at 0).
 Bag-of-words was what Maas et al. used on this dataset, so this is a fair
 comparison point, not a strawman.
 
-16 of the 18 feelings have 8 or fewer answer-key positives, so individual
+9 of the 11 feelings have 8 or fewer team-labelled positives, so individual
 feeling scores swing on one or two reviews. The macro number is the claim;
 the per-feeling ones are not.
 
     python eval/compare.py baseline distilroberta
 
-Resampling the 162 answer-key films 2,000 times puts the lead at +0.150, with a
-95% range of +0.095 to +0.204, and it never reaches 0. That covers which films
-were drawn, not training variation.
+Resampling those 74 films 2,000 times puts the lead at +0.180, with a 95% range
+of +0.097 to +0.263, and it never reaches 0. Over all 206 reviews it is +0.150,
+with a range of +0.095 to +0.204. That covers which films were drawn, not training
+variation.
 
-Two runs exist, with identical settings. The first scored 0.303, but its weights
-were never saved because the notebook did not save them yet. The second scored
-0.311 and is the reported model, `distilroberta-20261031-0648`. It is kept
-because it is the one with weights, not because it scored higher. Two runs is a
-hint at training variation, not a measurement of it.
+Two runs exist, with identical settings. Over all 206 reviews, the first scored
+0.303, but its weights were never saved because the notebook did not save them
+yet. The second scored 0.311 and is the reported model,
+`distilroberta-20261031-0648`. It is kept because it is the one with weights, not
+because it scored higher. Two runs is a hint at training variation, not a
+measurement of it.
 
 ### Against a general LLM
 
@@ -230,13 +253,15 @@ hint at training variation, not a measurement of it.
 `gpt-5.5-2026-04-23` took the same 206 reviews once, with default settings and
 the prompt that wrote the training labels, for $3.24. It saw review text only.
 
-It scored **0.728**, above the fine-tuned model on all 18 feelings. Resampling
-films puts its lead at +0.412, with a 95% range of +0.329 to +0.491, and it never
-reaches 0. This does not say why. The model could be too small, have too few
+On the team's 111 it scored **0.726**, above the fine-tuned model on all 11
+feelings. Resampling films puts its lead at +0.318, with a 95% range of +0.187 to
++0.441, and it never reaches 0. Over all 206 reviews it scored 0.728, with a lead
+of +0.412. This does not say why. The model could be too small, have too few
 examples per feeling, or be limited by its training labels, which came from a
 cheaper LLM (DeepSeek) using the same prompt.
 
-The size of the lead needs two caveats. The win itself survives both.
+The size of the lead needs caveats, because no part of the answer key is a clean
+test of GPT. This table uses the 18 reportable feelings.
 
 | group | reviews | baseline | fine-tuned | GPT 5.5 |
 | --- | --- | --- | --- | --- |
@@ -248,14 +273,15 @@ The size of the lead needs two caveats. The win itself survives both.
 - **The prompt was tuned on the hand-labelled reviews.** The pilot compared LLM
   output with those labels, and the notebook says to refine the prompt from that.
   GPT does better on that group, which fits this, but the groups also differ in
-  other ways, so it is not proof. The spot-check reviews played no part in the
-  pilot, and GPT still leads there. Apurba filled those in, although the notebook's
-  output shows the upload named `spotcheck_100_second_model.csv`.
+  other ways, so it is not proof.
+- **The spot-check labels came from the same prompt.** Those reviews played no part
+  in the pilot, and GPT leads there too. But their labels started as DeepSeek's and
+  were then hand checked, so that lead is not independent evidence.
 - **One answer-key review is in the prompt's examples.** An excerpt of
   `train-unsup-11406` is a worked example with no feelings marked, and that is its
-  answer-key label. Without it the score is still 0.728.
+  answer-key label. Without it the scores are still 0.726 and 0.728.
 
-GPT costs about 1.6 cents a review, so about $545 for the 34,626 reviews above.
+GPT costs about 1.6 cents a review, so about $577 for the 36,680 reviews above.
 That is the case for a model that runs on a free Colab GPU, if a retrain can close
 enough of the gap.
 

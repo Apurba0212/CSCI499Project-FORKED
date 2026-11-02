@@ -106,9 +106,9 @@ This is the part of SceneHawk we train ourselves.
 | --- | --- |
 | **Feelings list** | Fix 20–30 feelings, each with a one-line definition and an example. These are the model's outputs and the table's columns. |
 | **Labeling guide** | One main rule: label what the viewer *felt while watching*, not whether they liked the film. |
-| **Training labels** | A large LLM labels 3,000–5,000 reviews using the guide. We spot-check 100 by hand. |
-| **Answer key** | The team hand-labels 200–300 reviews. The model never trains on these. |
-| **Fine-tune** | Start from a small open-source model on Hugging Face and fine-tune it in Google Colab so it outputs a 0–1 score per feeling. |
+| **Training labels** | DeepSeek labels about 3,100 usable reviews using the guide. We hand check 100 of its labels separately. |
+| **Answer key** | The team's hand labels on 111 reviews. The model never trains on these. |
+| **Fine-tune** | Start from `distilroberta-base` on Hugging Face and fine-tune it in Google Colab so it outputs a 0–1 score per feeling. |
 | **Improve** | Find the feelings the model confuses, fix bad labels, add examples, retrain. |
 | **Freeze** | Save the final weights where the whole team and the app can load them. |
 
@@ -126,6 +126,21 @@ Two tests, both reported in full:
    At least five people outside the team rate the results without knowing
    which system produced which.
 
+### Model test so far
+
+Macro-F1 over the 11 feelings with at least 3 examples in the team's 111
+hand-labelled reviews:
+
+| System | Score |
+| --- | --- |
+| Word-based baseline (TF-IDF) | 0.222 |
+| Our model (`distilroberta-base`) | 0.410 |
+| GPT 5.5 | 0.726 |
+
+GPT's instructions were refined on these same reviews, so its lead may be
+inflated. The method and the wider comparison are in
+[chatbot/scripts/README.md](chatbot/scripts/README.md).
+
 ## Project status
 
 | Piece | Status |
@@ -133,8 +148,9 @@ Two tests, both reported in full:
 | Website (search, chat, film pages) | Built, deployed on Vercel |
 | Chat service | Removed, to be rebuilt on the feelings model |
 | Story matching on descriptions | Built |
-| Review collection and labeling | In progress |
-| Feelings model and feelings table | Planned |
+| Review collection and labeling | Done |
+| Feelings model | First version trained and tested, being improved |
+| Feelings table | Planned |
 | Genre filter, feeling match, combined scoring | Planned |
 | Results screen with scores and evidence | Planned |
 
@@ -152,10 +168,9 @@ shared notes, so design choices are grounded in prior work.
 
 ### Still to decide
 
-- The final feelings list
-- Where the reviews come from (each source's terms need checking)
-- The exact base model for fine-tuning
-- Where the feelings and description tables are stored
+- The final base model (`distilroberta-base` so far)
+- What score counts as good enough for our model
+- Whether our model or a general LLM labels every review
 
 ### If time allows
 

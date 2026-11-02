@@ -7,12 +7,15 @@ so running it does not spend the answer key any further than scoring did.
 
 The bootstrap resamples whole films, not reviews. Reviews of one film are not
 independent, and the splits are by film, so resampling reviews would claim more
-certainty than 162 films can give.
+certainty than the films can give.
 
 The range covers which answer-key films happened to be drawn. It does not cover
 training variation between runs, so it says nothing about a rerun of the model.
 
 Needs eval/preds/<name>_answer_key.jsonl and eval/thresholds_<name>.json.
+
+By default it scores what score.py headlines: the reviews the team labelled.
+--wide scores every answer-key review over the reportable tier instead.
 
 Run:  python eval/compare.py baseline distilroberta
 """
@@ -24,7 +27,7 @@ import sys
 from pathlib import Path
 
 from score import (LABELS, SPLIT_SOURCE, TIERS, TRAIN_DIR, confusion,
-                   load_jsonl, load_truth, macro_f1, prf)
+                   load_jsonl, load_truth, macro_f1, prf, team_view)
 
 HERE = Path(__file__).resolve().parent
 SEED = 49900                                           # same seed as sampling
@@ -64,6 +67,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("a", help="the system to compare against, e.g. baseline")
     ap.add_argument("b", help="the challenger, e.g. distilroberta")
+    ap.add_argument("--wide", action="store_true",
+                    help="every answer-key review, over the reportable tier")
     args = ap.parse_args()
 
     meta = json.loads((TRAIN_DIR / "meta.json").read_text(encoding="utf-8"))
@@ -77,6 +82,9 @@ def main():
     if set(pa) != set(pb):
         sys.exit(f"{args.a} and {args.b} predict different reviews, so a "
                  f"paired comparison is not possible.")
+
+    if not args.wide:
+        truth, names = team_view(truth, pa, feelings)
 
     fa = f1s(truth, pa, ta, feelings, names)
     fb = f1s(truth, pb, tb, feelings, names)

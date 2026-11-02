@@ -9,14 +9,18 @@ absence is recorded by the row not existing, which is what the schema means by
   learning.csv -> label_split 'train'       source 'llm'    labeler 'deepseek'
   checking.csv -> label_split 'val'         source 'llm'    labeler 'deepseek'
   exam.csv     -> label_split 'answer_key'  source 'human'  labeler 'team'
+                  for the reviews the team labelled (data/labeling/manifest.json)
+               -> label_split 'spot_check'  source 'llm'    labeler 'deepseek_hand_checked'
+                  for the rest
 
-exam.csv is the refined team merge plus the 100 blind spot-checks, so it is
-human and gets 'answer_key' - the value the schema reserves for the set that
-must never be trained on.
+The spot-check rows started as DeepSeek's labels and were then hand checked, so
+they are kept apart from the team's. Neither split is ever trained on.
 
-Run 04_load_supabase.py first (films and reviews must exist), and
-06_expand_films.py before that (the splits reference films the starter set
-does not have). Labels whose review is missing are skipped and counted.
+Run db/migrations/2026-11-02_spot_check_split.sql once on a database created
+before that split existed. Run 04_load_supabase.py first (films and reviews must
+exist), and 06_expand_films.py before that (the splits reference films the
+starter set does not have). Labels whose review is missing are skipped and
+counted.
 
 Safe to re-run: every insert upserts on (review_id, feeling, labeler), so a
 corrected CSV updates rather than duplicating.
@@ -42,6 +46,7 @@ load_dotenv(ROOT / ".env")
 
 REVIEWS = ROOT / "data" / "reviews.jsonl"
 FEELINGS_MD = ROOT / "docs" / "feelings-list.md"
+MANIFEST = ROOT / "data" / "labeling" / "manifest.json"
 BATCH = 1000
 
 # file            label_split    source   labeler
@@ -50,6 +55,8 @@ SPLITS = [
     ("checking", "val",        "llm",   "deepseek"),
     ("exam",     "answer_key", "human", "team"),
 ]
+# exam.csv rows the team was not assigned
+SPOT_CHECK = ("spot_check", "llm", "deepseek_hand_checked")
 META = {"id", "imdb_id", "review", "film", "year", "labeler", "notes", "source"}
 
 
@@ -93,7 +100,10 @@ def main():
     print(f"reviews available locally: {len(known):,}")
     print()
 
-    labels, splits, missing_total = [], [], 0
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    team = {rid for ids in manifest["assignments"].values() for rid in ids}
+
+    labels, splits, spot_ids, missing_total = [], [], [], 0
     for name, split, source, labeler in SPLITS:
         p = ROOT / "data" / f"{name}.csv"
         if not p.exists():
@@ -104,20 +114,29 @@ def main():
         if unknown:
             sys.exit(f"{name}.csv has columns that are not feelings: {unknown}")
 
-        marks = present = missing = 0
+        marks = present = missing = spot_marks = 0
         for r in rows:
             if r["id"] not in known:
                 missing += 1
                 continue
             present += 1
-            splits.append((r["id"], split))
+            spot = name == "exam" and r["id"] not in team
+            row_split, row_source, row_labeler = (
+                SPOT_CHECK if spot else (split, source, labeler))
+            if spot:
+                spot_ids.append(r["id"])
+            splits.append((r["id"], row_split))
             for f in cols:
                 if str(r[f]).strip() == "1":
-                    labels.append((r["id"], f, labeler, source))
+                    labels.append((r["id"], f, row_labeler, row_source))
                     marks += 1
+                    spot_marks += spot
         missing_total += missing
         print(f"{name + '.csv':<14} {len(rows):>5} rows -> {split:<11} "
-              f"{source:<6} | {marks:>5} labels | {missing:>5} reviews missing")
+              f"{source:<6} | {marks - spot_marks:>5} labels | {missing:>5} reviews missing")
+        if name == "exam":
+            print(f"{'':<14} {len(spot_ids):>5} of them -> {SPOT_CHECK[0]:<11} "
+                  f"{SPOT_CHECK[1]:<6} | {spot_marks:>5} labels")
 
     print()
     print(f"total: {len(labels):,} label rows, {len(splits):,} reviews to stamp")
@@ -139,14 +158,18 @@ def main():
     conn.autocommit = False
     cur = conn.cursor()
 
-    # 1. the labels themselves
+    # 1. the labels themselves. Spot-check rows once loaded as the team's, and
+    #    labeler is in the primary key, so the old rows have to go.
+    cur.execute("delete from review_labels where labeler = 'team' "
+                "and review_id = any(%s)", (spot_ids,))
+    print(f"\nreview_labels: {cur.rowcount:,} stale team rows removed")
     execute_values(cur, """
         insert into review_labels (review_id, feeling, labeler, source)
         values %s
         on conflict (review_id, feeling, labeler) do update
             set source = excluded.source
     """, labels, page_size=BATCH)
-    print(f"\nreview_labels: {len(labels):,} rows written")
+    print(f"review_labels: {len(labels):,} rows written")
 
     # 2. stamp each review with the split it belongs to. This is the guard
     #    rail: once the answer key is marked, a training query that forgets to
