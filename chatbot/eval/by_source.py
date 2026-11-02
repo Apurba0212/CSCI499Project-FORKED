@@ -3,7 +3,8 @@
 
 The answer key joins two groups. The team's hand labels also tuned the labelling
 prompt during the pilot, so an LLM given that prompt may do better on them than
-it otherwise would. The spot-check reviews played no part in the pilot.
+it otherwise would. The spot-check reviews played no part in the pilot, but their
+labels started as DeepSeek's, from that same prompt, and were then hand checked.
 
 Macro-F1 is noisy here, with few positives per feeling in each group, so micro-F1
 over the same feelings is printed next to it. Fits nothing and writes nothing.
@@ -12,18 +13,10 @@ Run:  python eval/by_source.py baseline distilroberta gpt55
 """
 import argparse
 import json
-from pathlib import Path
 
 from compare import f1s, load_system
-from score import (TIERS, TRAIN_DIR, confusion, load_truth, macro_f1)
-
-HERE = Path(__file__).resolve().parent
-MANIFEST = HERE.parent / "data" / "labeling" / "manifest.json"
-
-
-def hand_labelled():
-    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
-    return {rid for ids in manifest["assignments"].values() for rid in ids}
+from score import (TIERS, TRAIN_DIR, confusion, load_truth, macro_f1,
+                   team_labelled)
 
 
 def scores(truth, preds, thr, feelings, names):
@@ -44,7 +37,7 @@ def main():
     feelings = meta["feelings"]
     names = json.loads(TIERS.read_text(encoding="utf-8"))["tiers"]["reportable"]
     truth = load_truth("answer_key", feelings)
-    hand = hand_labelled()
+    hand = team_labelled()
 
     print(f"{'system':<16}{'group':<14}{'reviews':>8}{'macro-F1':>10}{'micro-F1':>10}")
     for name in args.systems:

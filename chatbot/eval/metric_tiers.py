@@ -147,7 +147,7 @@ def main():
                           "filtered by data/labels/corpus_ids.txt",
         "thresholds": {"min_answer_key": MIN_ANSWER_KEY,
                        "min_train": MIN_TRAIN, "wide_ci": WIDE_CI},
-        "headline_metric": "macro-F1 over the 'reportable' tier",
+        "headline_metric": "the wide comparison: macro-F1 over the 'reportable' tier. score.py's default headline is narrower.",
         "tiers": tiers,
         "wide_confidence": wide,
         "counts": {r["feeling"]: {k: r[k] for k in ("train", "val", "answer")}
