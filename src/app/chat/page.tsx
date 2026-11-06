@@ -1,4 +1,5 @@
 import ChatPanel from "@/components/ChatPanel";
+import { Em, PageHeader } from "@/components/ui";
 
 export const metadata = { title: "Chat" };
 
@@ -8,28 +9,23 @@ export const metadata = { title: "Chat" };
 // over the curated 29-film corpus.
 export default function ChatPage() {
   return (
-    <div className="pt-12">
-      <div className="mx-auto max-w-2xl">
-        <div className="mb-8 text-center">
-          <p className="mb-4 text-[11px] uppercase tracking-[0.35em] text-[#e0632f]">
-            Chat
-          </p>
-          <h1 className="font-display text-3xl md:text-4xl mb-3">
-            Talk to <em className="text-[#e0632f]">SceneHawk</em>
-          </h1>
-          <p className="text-sm leading-relaxed text-[#8f8b82]">
-            Describe what you want to feel and get a written recommendation,
-            grounded in films retrieved by mood and plot.
-          </p>
-        </div>
+    <div className="mx-auto max-w-3xl">
+      <PageHeader
+        center
+        title={
+          <>
+            Film recommendations by <Em>chat</Em>
+          </>
+        }
+        lead="Describe what you want to watch and get a written recommendation, based on films retrieved by mood and plot from a set of about 1,000."
+      />
 
-        <ChatPanel />
+      <ChatPanel />
 
-        <p className="mt-4 text-center text-[11px] text-[#6b675f]">
-          Recommendations are drawn only from the retrieved candidates — the
-          assistant won&apos;t invent films that aren&apos;t in the corpus.
-        </p>
-      </div>
+      <p className="mt-4 text-center text-xs text-fg-faint">
+        The assistant only recommends films it retrieved, so it won&apos;t
+        suggest titles that aren&apos;t in the set.
+      </p>
     </div>
   );
 }
