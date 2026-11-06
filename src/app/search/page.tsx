@@ -58,13 +58,12 @@ export default async function SearchPage({
       {!q ? (
         <PageHeader
           center
-          eyebrow="Discover"
           title={
             <>
-              What are you in the <Em>mood</Em> for?
+              Search films by <Em>mood</Em>
             </>
           }
-          lead="Describe the experience — not the genre."
+          lead={`Describe the experience you want, not the genre. Results come from ${films.length} analyzed films.`}
         />
       ) : (
         <div className="pt-10" />
@@ -76,7 +75,7 @@ export default async function SearchPage({
 
       {!q && (
         <div className="mx-auto mt-10 max-w-3xl">
-          <Label className="mb-3 text-center">Try asking</Label>
+          <Label className="mb-3 text-center">Example searches</Label>
           <div className="flex flex-wrap justify-center gap-2">
             {STARTERS.map((s) => (
               <Link
@@ -96,16 +95,14 @@ export default async function SearchPage({
           {/* System selector — this is the research comparison */}
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <Label>System</Label>
-            <div
-              role="tablist"
+            <nav
               aria-label="Recommendation system"
               className="flex flex-wrap gap-1 rounded-lg border border-line bg-surface p-1"
             >
               {PIPELINE_MODES.map((m) => (
                 <Link
                   key={m}
-                  role="tab"
-                  aria-selected={m === mode}
+                  aria-current={m === mode ? "page" : undefined}
                   href={`/search?q=${encodeURIComponent(q)}&mode=${m}`}
                   className={`rounded-md px-3 py-1.5 text-xs transition-colors ${
                     m === mode
@@ -116,7 +113,7 @@ export default async function SearchPage({
                   {PIPELINE_LABELS[m]}
                 </Link>
               ))}
-            </div>
+            </nav>
           </div>
 
           {result.note && (
@@ -143,7 +140,7 @@ export default async function SearchPage({
 
           <div className="mt-10 space-y-3">
             <div className="flex items-baseline justify-between gap-4">
-              <h2 className="font-display text-2xl">Your cinematic matches</h2>
+              <h2 className="font-display text-2xl">Matching films</h2>
               <span className="shrink-0 text-xs text-fg-faint">
                 {result.results.length} result
                 {result.results.length === 1 ? "" : "s"}
@@ -151,8 +148,8 @@ export default async function SearchPage({
             </div>
             {result.results.length === 0 && (
               <Card className="p-6 text-sm text-fg-subtle">
-                No matches surfaced. Try different descriptors — mood,
-                pacing, themes, visual style — or switch systems above.
+                No films matched. Describe the mood, pacing, themes or visual
+                style in other words, or switch to another system above.
               </Card>
             )}
             {result.results.map((s, idx) => (

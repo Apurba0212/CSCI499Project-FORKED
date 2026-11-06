@@ -64,13 +64,12 @@ export default async function CollectionsPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="Collections"
         title={
           <>
-            Shelves by <Em>feeling.</Em>
+            Film collections by <Em>mood</Em>
           </>
         }
-        lead="Curated groupings by cinematic quality rather than genre — the same idea the search engine uses, assembled by hand."
+        lead="Hand-picked groups of films that share a quality, not a genre. It is the same idea the search uses, put together by hand."
       />
 
       <div className="grid gap-4 md:grid-cols-2">

@@ -15,7 +15,7 @@ export function buttonClass(
   size: "md" | "lg" = "md",
 ) {
   return cx(
-    "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+    "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-[color,background-color,border-color,transform] duration-150 ease-[cubic-bezier(.2,.8,.2,1)] hover:-translate-y-px active:translate-y-px active:scale-[.985] disabled:pointer-events-none disabled:opacity-50",
     size === "lg" ? "px-6 py-3.5 text-[15px]" : "px-5 py-2.5 text-sm",
     variant === "primary" && "bg-accent text-canvas hover:bg-accent-hi",
     variant === "secondary" &&
@@ -33,7 +33,7 @@ export function Eyebrow({ children, className }: Children & { className?: string
   return (
     <p
       className={cx(
-        "text-[11px] font-medium uppercase tracking-[0.28em] text-accent",
+        "text-sm font-medium text-accent",
         className,
       )}
     >
@@ -47,7 +47,7 @@ export function Label({ children, className }: Children & { className?: string }
   return (
     <p
       className={cx(
-        "text-[11px] font-medium uppercase tracking-[0.2em] text-fg-subtle",
+        "text-sm font-medium text-fg-subtle",
         className,
       )}
     >
@@ -63,7 +63,7 @@ export function PageHeader({
   center,
   actions,
 }: {
-  eyebrow: string;
+  eyebrow?: string;
   title: React.ReactNode;
   lead?: React.ReactNode;
   center?: boolean;
@@ -76,14 +76,14 @@ export function PageHeader({
         center && "mx-auto max-w-2xl text-center",
       )}
     >
-      <Eyebrow className="mb-4">{eyebrow}</Eyebrow>
-      <h1 className="font-display text-4xl leading-[1.1] tracking-tight md:text-5xl">
+      {eyebrow && <Eyebrow className="mb-3">{eyebrow}</Eyebrow>}
+      <h1 className="text-balance font-display text-4xl leading-[1.1] tracking-tight md:text-5xl">
         {title}
       </h1>
       {lead && (
         <p
           className={cx(
-            "mt-4 max-w-xl text-[15px] leading-relaxed text-fg-subtle",
+            "mt-4 max-w-xl text-pretty text-[15px] leading-relaxed text-fg-subtle",
             center && "mx-auto",
           )}
         >
@@ -95,7 +95,7 @@ export function PageHeader({
   );
 }
 
-/** The one italic-accent word in a display heading. */
+/** The one italic-accent word in a display heading (use sparingly). */
 export function Em({ children }: Children) {
   return <em className="text-accent">{children}</em>;
 }
@@ -115,7 +115,7 @@ export function Card({
         href={href}
         className={cx(
           cardBase,
-          "group block transition-colors hover:border-line-strong hover:bg-surface-2",
+          "group block transition-[border-color,background-color,transform,box-shadow] duration-200 ease-[cubic-bezier(.2,.8,.2,1)] hover:-translate-y-0.5 hover:border-line-strong hover:bg-surface-2 hover:shadow-[0_12px_24px_-12px_rgb(0_0_0/0.5)]",
           className,
         )}
       >
@@ -159,10 +159,10 @@ export function Tag({
 /** Clickable pill — starter prompts, collection items, system toggles. */
 export function pillClass(active = false) {
   return cx(
-    "inline-flex items-center rounded-full border px-4 py-2 text-xs transition-colors",
+    "inline-flex items-center rounded-full border px-4 py-2 text-xs transition-[color,border-color,transform] duration-150",
     active
       ? "border-accent bg-accent-soft text-accent"
-      : "border-line bg-surface text-fg-muted hover:border-line-strong hover:text-fg",
+      : "border-line bg-surface text-fg-muted hover:-translate-y-px hover:border-line-strong hover:text-fg",
   );
 }
 
@@ -174,7 +174,7 @@ export function Arrow() {
       viewBox="0 0 16 16"
       fill="none"
       aria-hidden
-      className="transition-transform group-hover:translate-x-0.5"
+      className="shrink-0 transition-transform duration-150 group-hover:translate-x-[3px]"
     >
       <path
         d="M3 8h10m-4-4 4 4-4 4"

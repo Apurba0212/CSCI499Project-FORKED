@@ -24,7 +24,7 @@ export default function SearchBox({
 
   return (
     <form onSubmit={submit} role="search" className="w-full">
-      <div className="flex flex-col gap-2 rounded-xl border border-line-strong bg-surface p-2 shadow-[0_8px_40px_-12px_rgb(0_0_0/0.6)] transition-colors focus-within:border-accent/70 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-2 rounded-xl border border-line-strong bg-surface p-2 shadow-[0_8px_40px_-12px_rgb(0_0_0/0.6)] transition-colors focus-within:border-accent/70 focus-within:ring-2 focus-within:ring-accent/20 sm:flex-row sm:items-center">
         <label htmlFor="scenehawk-search" className="sr-only">
           Describe the film you want
         </label>
@@ -42,6 +42,9 @@ export default function SearchBox({
           </svg>
           <input
             id="scenehawk-search"
+            name="q"
+            autoComplete="off"
+            enterKeyHint="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Something unsettling and slow-burning…"
@@ -50,7 +53,7 @@ export default function SearchBox({
           />
         </div>
         <button type="submit" className={buttonClass("primary", "lg")}>
-          Explore
+          Find films
         </button>
       </div>
     </form>

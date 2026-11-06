@@ -12,20 +12,19 @@ export default function ChatPage() {
     <div className="mx-auto max-w-3xl">
       <PageHeader
         center
-        eyebrow="Chat"
         title={
           <>
-            Talk to <Em>SceneHawk</Em>
+            Film recommendations by <Em>chat</Em>
           </>
         }
-        lead="Describe what you want to feel and get a written recommendation, grounded in films retrieved by mood and plot."
+        lead="Describe what you want to watch and get a written recommendation, based on films retrieved by mood and plot from a set of about 1,000."
       />
 
       <ChatPanel />
 
       <p className="mt-4 text-center text-xs text-fg-faint">
-        Recommendations are drawn only from the retrieved candidates — the
-        assistant won&apos;t invent films that aren&apos;t in the corpus.
+        The assistant only recommends films it retrieved, so it won&apos;t
+        suggest titles that aren&apos;t in the set.
       </p>
     </div>
   );

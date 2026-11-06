@@ -5,6 +5,10 @@ description: SceneHawk's visual design system — color tokens, typography, shar
 
 # SceneHawk design system
 
+This skill wins where it conflicts with the general skills in this folder
+(`design-taste-frontend`, `web-design-guidelines`, `image-to-code`). Its
+rules already include the parts of those that fit a search app.
+
 Dark, cinematic, editorial. Think film-festival programme, not streaming
 app: calm surfaces, one warm accent, serif display type, honest labels.
 
@@ -33,11 +37,12 @@ view. Don't color whole sections orange.
 
 - `font-display` (Playfair) for headings and film titles only.
 - `font-sans` (Inter) for everything else.
-- Page title: `font-display text-4xl md:text-5xl tracking-tight`, with
-  exactly one word wrapped in `<Em>` (italic accent) — e.g.
-  "Shelves by *feeling.*"
-- Eyebrow above every page title (`<Eyebrow>`): uppercase, tracked, accent.
-- Small section labels (`<Label>`): uppercase, tracked, `fg-subtle`.
+- Page title: `font-display text-4xl md:text-5xl tracking-tight text-balance`,
+  with at most one word wrapped in `<Em>` (italic accent), e.g.
+  "Film collections by *mood*".
+- **No all-caps labels.** `<Eyebrow>` (accent) and `<Label>` (`fg-subtle`)
+  are sentence case, `text-sm font-medium`. Use an eyebrow only where it
+  adds a fact (the film page's genres), not as decoration.
 - Body copy `text-sm`/`text-[15px]` with `leading-relaxed`.
 - Numbers that line up (scores, counts): `tabular-nums`.
 
@@ -65,8 +70,12 @@ inlining it in a page.
 - Content width: `max-w-6xl` (set by layout). Search/chat columns
   `max-w-3xl`. Paragraphs `max-w-xl`.
 - Sections on long pages: `py-20 md:py-28`, separated by `border-t border-line`.
-- Hover = border goes `line-strong` + background `surface-2`, and the
-  title goes `accent` (via `group-hover`). No scale/bounce effects.
+- Motion (from taste-skill `motion.md`): a linked card lifts 2px and its
+  border darkens; buttons step up 1px on hover and press down on click;
+  arrows move 3px; the current nav item has a 2px accent bar under it.
+  Transitions list their properties (never `transition: all`). No scroll
+  reveals, parallax, tilt, bounce or auto-playing motion.
+- FAQs show every answer: no accordion.
 - Must work at 390px wide with no horizontal scroll. Nav stacks under
   the logo below `sm`.
 
@@ -78,18 +87,29 @@ inlining it in a page.
   label and the tooltip saying it's not a quality rating.
 - Show provider notices (`result.note`) via `Notice`; never hide the
   fact that the app is running on heuristic/template fallbacks.
-- Copy talks about feeling, atmosphere, pacing, visual language — not
-  genres or star ratings.
+- Copy (from taste-skill `copy.md`): plain words a stranger gets in five
+  seconds. The h1 names the category ("Film search by mood, not genre").
+  The first screen holds one hard fact (the film count). Headings name a
+  thing; never a question, command or metaphor ("Common questions", not
+  "Questions, answered."). Buttons are a verb plus an object ("Find films",
+  "Compare the systems"), never "Explore", "Discover" or "Learn more".
+  No exclamation marks, no invented proof or numbers.
+- Errors say what to do next. Loading labels end with `…` ("Sending…").
 
 ## 6. Accessibility
 
 - Visible focus is global (`:focus-visible` accent outline) — don't remove.
-- Inputs need a `<label>` (use `sr-only` if visual label is redundant).
+- A "Skip to content" link is the first focusable element (layout).
+- Inputs need a `<label>` (use `sr-only` if visual label is redundant),
+  a `name`, and `autoComplete="off"` (they are not personal fields).
+- Async results (chat log, answers) sit in `aria-live="polite"` regions.
 - Icon-only controls need `aria-label`; decorative SVGs `aria-hidden`.
 - Toggles: `aria-expanded` / `aria-current` / `aria-selected` as appropriate.
 - Reduced motion is respected in `globals.css`.
 
 ## Checklist before finishing a UI change
+
+0. Run the `web-design-guidelines` skill on the changed files.
 
 1. `grep -rn "#[0-9a-fA-F]\{6\}" src/app src/components` → only `globals.css`.
 2. `npx tsc --noEmit` and `npm run build` pass.

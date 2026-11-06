@@ -31,7 +31,7 @@ export default function MatchCard({
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <h3 className="font-display text-xl font-semibold leading-snug transition-colors group-hover:text-accent sm:text-2xl">
+              <h3 className="break-words font-display text-xl font-semibold leading-snug transition-colors group-hover:text-accent sm:text-2xl">
                 {m.title}
               </h3>
               <p className="mt-1 text-sm text-fg-subtle">
@@ -48,8 +48,8 @@ export default function MatchCard({
               <div className="text-xl font-semibold tabular-nums text-accent">
                 {score.displayScore}
               </div>
-              <div className="text-[9px] uppercase tracking-wider text-fg-subtle">
-                cinematic match
+              <div className="text-[11px] text-fg-subtle">
+                Cinematic match
               </div>
             </div>
           </div>

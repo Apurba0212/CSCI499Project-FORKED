@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Faq, { type FaqItem } from "@/components/Faq";
 import SearchBox from "@/components/SearchBox";
-import { Card, Em, Eyebrow, buttonClass, pillClass } from "@/components/ui";
+import { Card, Em, buttonClass, pillClass } from "@/components/ui";
 import { getFilmRepository } from "@/lib/data";
 import { PIPELINE_LABELS, PIPELINE_MODES, type PipelineMode } from "@/lib/types";
 
@@ -16,18 +16,18 @@ const STARTERS = [
 const STEPS = [
   {
     n: "01",
-    title: "Describe the feeling",
-    body: "Atmosphere, pacing, visual language — “isolated and unsettling, slow burn, no jump scares.”",
+    title: "You describe a mood",
+    body: "Atmosphere, pacing and visual style, in your own words. For example: isolated and unsettling, slow burn, no jump scares.",
   },
   {
     n: "02",
     title: "Agents search the analysis",
-    body: "Specialized agents retrieve evidence across themes, mood, narrative structure, and cinematography.",
+    body: "Separate agents look for evidence in themes, mood, narrative structure and cinematography.",
   },
   {
     n: "03",
-    title: "Get matches with reasons",
-    body: "Every recommendation is ranked and explained — grounded in the analysis it was retrieved from.",
+    title: "You get ranked matches",
+    body: "Each film comes with a reason, taken from the analysis it was found in.",
   },
 ];
 
@@ -87,16 +87,13 @@ export default async function Home() {
       {/* ─── Hero ─────────────────────────────────────────── */}
       <section className="pb-16 pt-16 md:pb-24 md:pt-28">
         <div className="max-w-3xl">
-          <Eyebrow className="mb-6">Multi-agent film discovery</Eyebrow>
-          <h1 className="font-display text-[2.6rem] leading-[1.05] tracking-tight sm:text-6xl md:text-7xl">
-            Describe the film
-            <br />
-            you want to <Em>feel.</Em>
+          <h1 className="text-balance font-display text-[2.6rem] leading-[1.05] tracking-tight sm:text-6xl md:text-7xl">
+            Film search by <Em>mood</Em>, not genre
           </h1>
-          <p className="mt-6 max-w-xl text-lg leading-relaxed text-fg-muted">
-            For people who know what kind of evening they want but not which
-            title delivers it. Search by atmosphere, pacing, and visual
-            language — not genre, rating, or what you watched last.
+          <p className="mt-6 max-w-xl text-pretty text-lg leading-relaxed text-fg-muted">
+            Describe the atmosphere, pacing or visual style you want.
+            SceneHawk searches {films.length} hand-analyzed films and tells
+            you why each match fits.
           </p>
         </div>
 
@@ -129,9 +126,8 @@ export default async function Home() {
 
       {/* ─── How it works ─────────────────────────────────── */}
       <section id="how-it-works" className="scroll-mt-24 py-20 md:py-28">
-        <Eyebrow className="mb-3">How it works</Eyebrow>
-        <h2 className="max-w-xl font-display text-3xl tracking-tight md:text-4xl">
-          From a feeling to a film, with the <Em>evidence</Em> attached.
+        <h2 className="text-balance font-display text-3xl tracking-tight md:text-4xl">
+          How the search works
         </h2>
         <div className="mt-10 grid gap-4 md:grid-cols-3">
           {STEPS.map((s) => (
@@ -152,20 +148,19 @@ export default async function Home() {
       <section className="border-t border-line py-20 md:py-28">
         <div className="grid gap-10 md:grid-cols-[1fr_1.4fr] md:gap-16">
           <div>
-            <Eyebrow className="mb-3">The experiment</Eyebrow>
-            <h2 className="font-display text-3xl tracking-tight md:text-4xl">
-              Four systems, one <Em>query.</Em>
+            <h2 className="text-balance font-display text-3xl tracking-tight md:text-4xl">
+              Four search systems, compared
             </h2>
             <p className="mt-4 text-[15px] leading-relaxed text-fg-subtle">
-              Every search can run through four strategies over the same
-              corpus — from a conventional baseline to the full multi-agent
-              pipeline. Switch between them on any results page.
+              This is a research project. Every search can run through four
+              systems over the same films, from a simple baseline to the full
+              multi-agent pipeline. Switch between them on any results page.
             </p>
             <Link
               href="/search"
               className={`${buttonClass("secondary")} group mt-6`}
             >
-              Compare them yourself
+              Compare the systems
             </Link>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -177,7 +172,7 @@ export default async function Home() {
                 <div className="flex items-center justify-between gap-2">
                   <p className="font-medium text-fg">{PIPELINE_LABELS[m]}</p>
                   {m === "multi" && (
-                    <span className="text-[10px] uppercase tracking-wider text-accent">
+                    <span className="text-xs text-accent">
                       Default
                     </span>
                   )}
@@ -198,13 +193,12 @@ export default async function Home() {
       >
         <div className="grid gap-10 md:grid-cols-[1fr_1.4fr] md:gap-16">
           <div>
-            <Eyebrow className="mb-3">FAQ</Eyebrow>
-            <h2 className="font-display text-3xl tracking-tight md:text-4xl">
-              Questions, <Em>answered.</Em>
+            <h2 className="text-balance font-display text-3xl tracking-tight md:text-4xl">
+              Common questions
             </h2>
             <p className="mt-6 text-sm text-fg-subtle">
-              Still curious? Ask SceneHawk directly in{" "}
-              <Link href="/chat" className="text-accent hover:underline">
+              Anything else can go to{" "}
+              <Link href="/chat" className="text-accent underline decoration-accent/40 underline-offset-4 hover:decoration-accent">
                 Chat
               </Link>
               .

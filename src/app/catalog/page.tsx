@@ -14,13 +14,12 @@ export default async function CatalogPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="Analysis"
         title={
           <>
-            The corpus, <Em>analyzed.</Em>
+            Film analysis <Em>index</Em>
           </>
         }
-        lead={`${films.length} films — each with structured attributes and five analytical dimensions (themes, atmosphere, narrative, visual language, inner lives). Deliberately small but deep.`}
+        lead={`All ${films.length} films in the search, each analyzed for themes, atmosphere, narrative, visual language and characters. The set is small on purpose, so each entry can go deep.`}
       />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -40,7 +39,7 @@ export default async function CatalogPage() {
                 <Tag key={a}>{a}</Tag>
               ))}
             </div>
-            <p className="mt-auto pt-4 text-[10px] uppercase tracking-wider text-fg-faint">
+            <p className="mt-auto pt-4 text-xs capitalize text-fg-faint">
               {f.metadata.popularity} · {f.narrative.pacing}
             </p>
           </Card>

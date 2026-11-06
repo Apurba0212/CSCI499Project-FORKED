@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AskBox from "@/components/AskBox";
-import { Arrow, Card, Eyebrow, Label, Tag } from "@/components/ui";
+import { Arrow, Card, Eyebrow, Tag } from "@/components/ui";
 import { getFilmRepository } from "@/lib/data";
 import { exploreConnections } from "@/lib/explore";
 
@@ -68,8 +68,8 @@ export default async function FilmPage({
 
       {/* Header */}
       <header className="mt-6 border-b border-line pb-10">
-        <Eyebrow className="mb-4">{m.genres.join(" · ")}</Eyebrow>
-        <h1 className="font-display text-4xl font-semibold tracking-tight sm:text-6xl">
+        <Eyebrow className="mb-3">{m.genres.join(", ")}</Eyebrow>
+        <h1 className="text-balance break-words font-display text-4xl font-semibold tracking-tight sm:text-6xl">
           {m.title}
         </h1>
         <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-fg-subtle">
@@ -151,7 +151,7 @@ export default async function FilmPage({
       {/* Exploration — cross-dimensional connections */}
       {connections.length > 0 && (
         <section className="mt-16">
-          <Label className="mb-4">Explore its connections</Label>
+          <h2 className="mb-4 font-display text-2xl">Related films</h2>
           <div className="grid gap-3 md:grid-cols-2">
             {connections.map((c) => (
               <Card
@@ -160,7 +160,7 @@ export default async function FilmPage({
                 className="flex items-center justify-between gap-4 p-5"
               >
                 <div>
-                  <p className="text-[11px] uppercase tracking-wider text-accent">
+                  <p className="text-xs font-medium text-accent first-letter:uppercase">
                     {c.relation}
                   </p>
                   <p className="mt-1.5 font-display text-lg">
@@ -181,7 +181,7 @@ export default async function FilmPage({
 
       {/* Ask about this film — RAG over its analytical chunks */}
       <section className="mt-16">
-        <Label className="mb-4">Ask about this film</Label>
+        <h2 className="mb-4 font-display text-2xl">Questions about {m.title}</h2>
         <AskBox filmId={film.id} />
       </section>
     </div>
