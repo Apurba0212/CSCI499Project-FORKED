@@ -1,17 +1,10 @@
 import Link from "next/link";
 import Faq, { type FaqItem } from "@/components/Faq";
-import SearchBox from "@/components/SearchBox";
-import { Card, Em, buttonClass, pillClass } from "@/components/ui";
+import { Arrow, Card, Em, buttonClass } from "@/components/ui";
 import { getFilmRepository } from "@/lib/data";
 import { PIPELINE_LABELS, PIPELINE_MODES, type PipelineMode } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
-
-const STARTERS = [
-  "Isolated and unsettling, slow burn, no jump scares",
-  "Melancholic and visually beautiful",
-  "Meditative sci-fi with long takes",
-];
 
 // Defines the three discovery steps
 const STEPS = [
@@ -88,31 +81,29 @@ export default async function Home() {
   return (
     <div>
       {/* ─── Hero ─────────────────────────────────────────── */}
+      {/* Kept on purpose: the team chose this headline over a plainer one. */}
       <section className="pb-16 pt-16 md:pb-24 md:pt-28">
         <div className="max-w-3xl">
-          <h1 className="text-balance font-display text-[2.6rem] leading-[1.05] tracking-tight sm:text-6xl md:text-7xl">
-            Film search by <Em>mood</Em>, not genre
+          <p className="mb-6 text-[11px] uppercase tracking-[0.35em] text-accent md:mb-8">
+            Multi-agent film discovery
+          </p>
+          <h1 className="font-display text-[2.6rem] leading-[1.05] tracking-tight sm:text-6xl md:text-7xl">
+            Describe the film
+            <br />
+            you want to <Em>feel.</Em>
           </h1>
           <p className="mt-6 max-w-xl text-pretty text-lg leading-relaxed text-fg-muted">
-            Describe the atmosphere, pacing or visual style you want.
-            SceneHawk searches {films.length} hand-analyzed films and tells
-            you why each match fits.
+            For people who know what kind of evening they want but not which
+            title delivers it. Search by atmosphere, pacing, and visual
+            language instead of genre, rating, or what you watched last.
           </p>
-        </div>
-
-        <div className="mt-10 max-w-2xl">
-          <SearchBox />
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <span className="mr-1 text-xs text-fg-faint">Try:</span>
-            {STARTERS.map((s) => (
-              <Link
-                key={s}
-                href={`/search?q=${encodeURIComponent(s)}&mode=multi`}
-                className={pillClass()}
-              >
-                {s}
-              </Link>
-            ))}
+          <div className="mt-10 flex flex-wrap gap-3">
+            <Link href="/search" className={`${buttonClass("primary", "lg")} group`}>
+              Start a search <Arrow />
+            </Link>
+            <a href="#how-it-works" className={buttonClass("secondary", "lg")}>
+              See how it works
+            </a>
           </div>
         </div>
       </section>
