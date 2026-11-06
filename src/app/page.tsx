@@ -1,11 +1,23 @@
 import Link from "next/link";
 import Faq, { type FaqItem } from "@/components/Faq";
+import SearchBox from "@/components/SearchBox";
+import { Card, Em, Eyebrow, buttonClass, pillClass } from "@/components/ui";
+import { getFilmRepository } from "@/lib/data";
+import { PIPELINE_LABELS, PIPELINE_MODES, type PipelineMode } from "@/lib/types";
+
+export const dynamic = "force-dynamic";
+
+const STARTERS = [
+  "Isolated and unsettling, slow burn, no jump scares",
+  "Melancholic and visually beautiful",
+  "Meditative sci-fi with long takes",
+];
 
 const STEPS = [
   {
     n: "01",
     title: "Describe the feeling",
-    body: "Atmosphere, pacing, visual language — 'isolated and unsettling, slow burn, no jump scares.'",
+    body: "Atmosphere, pacing, visual language — “isolated and unsettling, slow burn, no jump scares.”",
   },
   {
     n: "02",
@@ -19,10 +31,29 @@ const STEPS = [
   },
 ];
 
+const SYSTEM_BLURBS: Record<PipelineMode, string> = {
+  content: "Genre, director, and keyword overlap — the conventional baseline.",
+  llm: "The query goes straight to a language model — no retrieval at all.",
+  rag: "One retrieval pass over the whole analytical corpus, then rank and explain.",
+  multi: "Specialized agents retrieve per dimension; a ranker fuses their evidence.",
+};
+
+const DIMENSIONS = [
+  "Themes",
+  "Atmosphere",
+  "Narrative",
+  "Visual language",
+  "Inner lives",
+];
+
 const FAQS: FaqItem[] = [
   {
     q: "What is SceneHawk?",
     a: "A film discovery system that searches by experience — atmosphere, pacing, and visual language — instead of genre labels or ratings. Under the hood it's a multi-agent pipeline running over a curated analytical film corpus.",
+  },
+  {
+    q: "Do I need an account?",
+    a: "No. SceneHawk only searches a public film corpus — there's nothing personal to store or protect, so there's no sign-in.",
   },
   {
     q: "How is this different from IMDb or Netflix?",
@@ -42,66 +73,143 @@ const FAQS: FaqItem[] = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const films = await getFilmRepository().listFilms();
+
+  const stats = [
+    { value: String(films.length), label: "films, analyzed in depth" },
+    { value: String(DIMENSIONS.length), label: "analytical dimensions each" },
+    { value: String(PIPELINE_MODES.length), label: "systems compared side by side" },
+  ];
+
   return (
     <div>
       {/* ─── Hero ─────────────────────────────────────────── */}
-      <section className="pt-14 md:pt-28 pb-16 md:pb-24 max-w-3xl">
-        <p className="text-[11px] tracking-[0.35em] uppercase text-[#e0632f] mb-6 md:mb-8">
-          Multi-agent film discovery
-        </p>
-        <h1 className="font-display text-4xl sm:text-5xl md:text-7xl leading-[1.08] tracking-tight mb-6 md:mb-8">
-          Describe the film
-          <br />
-          you want to <em className="text-[#e0632f]">feel.</em>
-        </h1>
-        <p className="text-lg leading-relaxed text-[#b7b2a7] max-w-xl mb-12">
-          For people who know what kind of evening they want but not which
-          title delivers it. Search by atmosphere, pacing, and visual
-          language instead of genre, rating, or what you watched last.
-        </p>
-        <div className="flex flex-wrap gap-4">
-          <Link
-            href="/search"
-            className="rounded-full bg-[#e0632f] px-7 py-3.5 font-medium text-[#0a0a0a] hover:bg-[#ea7443] transition-colors"
-          >
-            Start a search →
-          </Link>
-          <a
-            href="#how-it-works"
-            className="rounded-full border border-[#3a372f] px-7 py-3.5 font-medium text-[#ece7df] hover:border-[#e0632f] hover:text-[#e0632f] transition-colors"
-          >
-            See how it works
-          </a>
+      <section className="pb-16 pt-16 md:pb-24 md:pt-28">
+        <div className="max-w-3xl">
+          <Eyebrow className="mb-6">Multi-agent film discovery</Eyebrow>
+          <h1 className="font-display text-[2.6rem] leading-[1.05] tracking-tight sm:text-6xl md:text-7xl">
+            Describe the film
+            <br />
+            you want to <Em>feel.</Em>
+          </h1>
+          <p className="mt-6 max-w-xl text-lg leading-relaxed text-fg-muted">
+            For people who know what kind of evening they want but not which
+            title delivers it. Search by atmosphere, pacing, and visual
+            language — not genre, rating, or what you watched last.
+          </p>
+        </div>
+
+        <div className="mt-10 max-w-2xl">
+          <SearchBox />
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="mr-1 text-xs text-fg-faint">Try:</span>
+            {STARTERS.map((s) => (
+              <Link
+                key={s}
+                href={`/search?q=${encodeURIComponent(s)}&mode=multi`}
+                className={pillClass()}
+              >
+                {s}
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
+      {/* ─── Stats strip ──────────────────────────────────── */}
+      <section className="grid grid-cols-1 divide-y divide-line rounded-xl border border-line bg-surface sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+        {stats.map((s) => (
+          <div key={s.label} className="px-6 py-5">
+            <p className="font-display text-3xl text-fg">{s.value}</p>
+            <p className="mt-1 text-sm text-fg-subtle">{s.label}</p>
+          </div>
+        ))}
+      </section>
+
       {/* ─── How it works ─────────────────────────────────── */}
-      <section
-        id="how-it-works"
-        className="py-12 md:py-20 border-t border-[#2a2825]"
-      >
-        <div className="grid gap-10 md:grid-cols-3">
+      <section id="how-it-works" className="scroll-mt-24 py-20 md:py-28">
+        <Eyebrow className="mb-3">How it works</Eyebrow>
+        <h2 className="max-w-xl font-display text-3xl tracking-tight md:text-4xl">
+          From a feeling to a film, with the <Em>evidence</Em> attached.
+        </h2>
+        <div className="mt-10 grid gap-4 md:grid-cols-3">
           {STEPS.map((s) => (
-            <div key={s.n}>
-              <p className="font-display text-sm text-[#e0632f] mb-3">
+            <Card key={s.n} className="p-6">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-accent/30 bg-accent-soft font-display text-sm text-accent">
                 {s.n}
-              </p>
-              <h3 className="font-display text-2xl mb-3">{s.title}</h3>
-              <p className="text-sm leading-relaxed text-[#8f8b82]">
+              </span>
+              <h3 className="mt-5 font-display text-xl">{s.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-fg-subtle">
                 {s.body}
               </p>
-            </div>
+            </Card>
           ))}
         </div>
       </section>
 
+      {/* ─── Research: the four systems ───────────────────── */}
+      <section className="border-t border-line py-20 md:py-28">
+        <div className="grid gap-10 md:grid-cols-[1fr_1.4fr] md:gap-16">
+          <div>
+            <Eyebrow className="mb-3">The experiment</Eyebrow>
+            <h2 className="font-display text-3xl tracking-tight md:text-4xl">
+              Four systems, one <Em>query.</Em>
+            </h2>
+            <p className="mt-4 text-[15px] leading-relaxed text-fg-subtle">
+              Every search can run through four strategies over the same
+              corpus — from a conventional baseline to the full multi-agent
+              pipeline. Switch between them on any results page.
+            </p>
+            <Link
+              href="/search"
+              className={`${buttonClass("secondary")} group mt-6`}
+            >
+              Compare them yourself
+            </Link>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {PIPELINE_MODES.map((m) => (
+              <Card
+                key={m}
+                className={`p-5 ${m === "multi" ? "border-accent/40" : ""}`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-medium text-fg">{PIPELINE_LABELS[m]}</p>
+                  {m === "multi" && (
+                    <span className="text-[10px] uppercase tracking-wider text-accent">
+                      Default
+                    </span>
+                  )}
+                </div>
+                <p className="mt-2 text-sm leading-relaxed text-fg-subtle">
+                  {SYSTEM_BLURBS[m]}
+                </p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ─── FAQ ──────────────────────────────────────────── */}
-      <section className="py-16 md:py-24 border-t border-[#2a2825]">
-        <h2 className="font-display text-4xl md:text-5xl mb-8">
-          <em className="text-[#e0632f]">FAQ</em>
-        </h2>
-        <div className="max-w-3xl">
+      <section
+        id="faq"
+        className="scroll-mt-24 border-t border-line py-20 md:py-28"
+      >
+        <div className="grid gap-10 md:grid-cols-[1fr_1.4fr] md:gap-16">
+          <div>
+            <Eyebrow className="mb-3">FAQ</Eyebrow>
+            <h2 className="font-display text-3xl tracking-tight md:text-4xl">
+              Questions, <Em>answered.</Em>
+            </h2>
+            <p className="mt-6 text-sm text-fg-subtle">
+              Still curious? Ask SceneHawk directly in{" "}
+              <Link href="/chat" className="text-accent hover:underline">
+                Chat
+              </Link>
+              .
+            </p>
+          </div>
           <Faq items={FAQS} />
         </div>
       </section>

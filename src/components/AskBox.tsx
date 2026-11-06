@@ -35,18 +35,18 @@ export default function AskBox({ filmId }: { filmId: string }) {
   }
 
   return (
-    <div className="rounded-xl border border-[#2a2825] bg-[#141315] p-6">
+    <div className="rounded-xl border border-line bg-surface p-5 sm:p-6">
       <form onSubmit={ask} className="flex flex-col sm:flex-row gap-3">
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder='e.g. "Why does this feel unsettling?" or "How does the cinematography build tension?"'
-          className="flex-1 rounded-lg border border-[#2a2825] bg-[#0a0a0a] px-4 py-3 text-sm placeholder:text-[#6b675f] focus:border-[#e0632f] focus:outline-none"
+          className="flex-1 rounded-lg border border-line bg-canvas px-4 py-3 text-sm placeholder:text-fg-faint focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
         />
         <button
           type="submit"
           disabled={loading}
-          className="rounded-lg bg-[#e0632f] px-6 py-3 text-sm font-semibold text-black hover:bg-[#ea7443] disabled:opacity-50 transition-colors"
+          className="rounded-lg bg-accent px-6 py-3 text-sm font-semibold text-canvas hover:bg-accent-hi disabled:opacity-50 transition-colors"
         >
           {loading ? "…" : "Ask"}
         </button>
@@ -55,13 +55,13 @@ export default function AskBox({ filmId }: { filmId: string }) {
       {responses.length > 0 && (
         <div className="mt-5 space-y-4">
           {responses.map(({ q, r }, idx) => (
-            <div key={idx} className="border-t border-[#2a2825] pt-4">
-              <p className="text-sm text-[#8f8b82]">Q: {q}</p>
-              <p className="mt-2 text-sm leading-relaxed text-[#ece7df]">
+            <div key={idx} className="border-t border-line pt-4">
+              <p className="text-sm text-fg-subtle">Q: {q}</p>
+              <p className="mt-2 text-sm leading-relaxed text-fg">
                 {r.answer}
               </p>
               {r.dimension && (
-                <p className="mt-2 text-[10px] uppercase tracking-wider text-[#8f8b82]">
+                <p className="mt-2 text-[10px] uppercase tracking-wider text-fg-subtle">
                   grounded in: {r.dimension} analysis · {r.source}
                 </p>
               )}
